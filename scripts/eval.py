@@ -111,7 +111,8 @@ def eval_net(epoch, net, net_a, net_v, dataset, loader, device, mode, train_or):
                 
                 if train_or=='val':
                     
-                    mask_pred=F.interpolate(mask_pred,(ori_w,ori_h),mode='bicubic',align_corners=True)
+                    # mask_pred=F.interpolate(mask_pred,(ori_w,ori_h),mode='bicubic',align_corners=True)
+                    mask_pred = F.interpolate(mask_pred, (ori_w, ori_h), mode='bilinear', align_corners=True)
             
 
             if mode== 'whole':

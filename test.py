@@ -7,9 +7,9 @@ import torch
 import numpy as np
 from scripts.model import Generator_main, Generator_branch
 from scripts.dataset import LearningAVSegData
-from torch.utils.data import DataLoader
 from scripts.eval import eval_net
 from scripts.utils import Define_image_size
+from torch.utils.data import DataLoader
 
 
 def test_net(net_all, net_a, net_v, loader, device, mode, dataset_train):
@@ -45,10 +45,13 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     args = get_args()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    has_gpu = torch.cuda.is_available()
+    has_mps = torch.backends.mps.is_built()
+    device = "mps" if has_mps else "gpu" if has_gpu else "cpu"
+
     logging.info(f'Using device {device}')
 
     img_size = Define_image_size(args.uniform, args.dataset)
@@ -98,7 +101,7 @@ if __name__ == '__main__':
     iou_total = []
 
     dataset = LearningAVSegData(test_dir, test_label, test_mask, img_size, dataset_name=dataset_name, train_or=False)
-    test_loader = DataLoader(dataset, batch_size=args.batchsize, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
+    test_loader = DataLoader(dataset, batch_size=args.batchsize, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
     net_G = Generator_main(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
     net_G_A = Generator_branch(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
     net_G_V = Generator_branch(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
@@ -107,9 +110,9 @@ if __name__ == '__main__':
 
     for i in range(1):
         checkpoint_path_ = "./{}/{}_{}/Discriminator_unet/".format(dataset_name, args.jn,42-2*i)
-        net_G.load_state_dict(torch.load( checkpoint_path_ + 'CP_best_F1_all.pth'))
-        net_G_A.load_state_dict(torch.load( checkpoint_path_ + 'CP_best_F1_A.pth'))
-        net_G_V.load_state_dict(torch.load(checkpoint_path_ + 'CP_best_F1_V.pth'))
+        net_G.load_state_dict(torch.load( checkpoint_path_ + 'CP_best_F1_all.pth', map_location=torch.device(device)))
+        net_G_A.load_state_dict(torch.load( checkpoint_path_ + 'CP_best_F1_A.pth', map_location=torch.device(device)))
+        net_G_V.load_state_dict(torch.load(checkpoint_path_ + 'CP_best_F1_V.pth', map_location=torch.device(device)))
         net_G.eval()
         net_G_A.eval()
         net_G_V.eval()
