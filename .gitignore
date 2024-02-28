@@ -135,5 +135,5 @@ dmypy.json
 *-AV
 *_AV
 
-input/*
-output/*
+input*
+output*
